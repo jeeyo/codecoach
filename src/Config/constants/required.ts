@@ -8,3 +8,4 @@ export const GITLAB_ARGS: RequiredArgs = [
   'gitlabProjectId',
   'gitlabToken',
 ];
+export const LOCALGIT_ARGS: RequiredArgs = ['localgitSourceBranch'];

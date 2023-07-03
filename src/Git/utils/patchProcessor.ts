@@ -1,4 +1,4 @@
-import { Patch } from '../@types/PatchTypes';
+import { Diff, Patch } from '../@types/PatchTypes';
 
 export function getPatch(patch?: string): Patch[] {
   if (!patch) return [];
@@ -39,4 +39,36 @@ function getPatchSingleSection(lines: string[], from: number): Patch[] {
       .slice(0, -1)
       .concat({ from: lastPatch?.from ?? currentLine, to: currentLine });
   }, [] as Patch[]);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getDiff(patches?: string): Diff[] {
+  if (!patches) return [];
+
+  const splitter = /diff --git.*?(?=diff --git|$)/gs;
+  const heading = /diff --git.*?(?=@@)/gs;
+  const diffInfoMatcher = /diff --git a\/([\S]+) b\/([\S]+)/;
+
+  const eachFileDiffs = patches.match(splitter);
+  if (!eachFileDiffs) return [];
+
+  return eachFileDiffs.map((diff) => {
+    const [_, _filenameA, _filenameB] = diff.match(diffInfoMatcher) ?? ['', ''];
+    const content = diff.split(heading);
+    console.log(_filenameB, content[1]);
+    return {
+      file: _filenameB,
+      patch: getPatch(content[1]),
+    };
+  });
+
+  // eachFileDiffs.forEach((diff) => {
+  //   const [diffInfo, ...content] = diff.split('\n');
+  //   const diffMatch = diffInfo.match(diffInfoMatcher);
+  //   if (!diffMatch) return;
+
+  //   console.log('diffInfo', diffInfo);
+  //   console.log('content', content);
+  //   console.log('diffMatch', diffMatch);
+  // });
 }

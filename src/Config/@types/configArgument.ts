@@ -9,6 +9,7 @@ export type ConfigArgument = {
   gitlabProjectId: number;
   gitlabMrIid: number;
   gitlabToken: string;
+  localgitSourceBranch: string;
   buildLogFile: BuildLogFile[];
   output: string; // =logFilePath
   removeOldComment: boolean;

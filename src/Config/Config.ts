@@ -2,7 +2,7 @@ import yargs from 'yargs';
 import { ProjectType } from './@enums';
 import { BuildLogFile, ConfigArgument } from './@types';
 import { DEFAULT_OUTPUT_FILE } from './constants/defaults';
-import { GITHUB_ARGS, GITLAB_ARGS } from './constants/required';
+import { GITHUB_ARGS, GITLAB_ARGS, LOCALGIT_ARGS } from './constants/required';
 import fs from 'fs';
 
 const projectTypes = Object.keys(ProjectType);
@@ -12,7 +12,7 @@ const args = yargs
   .option('vcs', {
     alias: 'g',
     describe: 'VCS Type',
-    choices: ['github', 'gitlab'],
+    choices: ['github', 'gitlab', 'local'],
   })
 
   .option('githubRepoUrl', {
@@ -44,9 +44,16 @@ const args = yargs
     describe: 'GitLab token',
     type: 'string',
   })
+
+  .option('localgitSourceBranch', {
+    describe: 'local git source branch',
+    type: 'string',
+  })
+
   .group(['vcs', 'buildLogFile', 'output', 'removeOldComment'], 'Parsing options:')
   .group(GITLAB_ARGS, 'GitLab options:')
   .group(GITHUB_ARGS, 'GitHub options:')
+  .group(LOCALGIT_ARGS, 'Local git options:')
   .check((options) => {
     // validate VCS configs
     if (options.vcs === 'github' && GITHUB_ARGS.some((arg) => !options[arg]))
@@ -54,6 +61,11 @@ const args = yargs
 
     if (options.vcs === 'gitlab' && GITLAB_ARGS.some((arg) => !options[arg]))
       throw `GitLab requires [${GITLAB_ARGS.map((a) => `--${a}`).join(', ')}] to be set`;
+
+    if (options.vcs === 'local' && LOCALGIT_ARGS.some((arg) => !options[arg]))
+      throw `Local git requires [${LOCALGIT_ARGS.map((a) => `--${a}`).join(
+        ', ',
+      )}] to be set`;
 
     return true;
   })

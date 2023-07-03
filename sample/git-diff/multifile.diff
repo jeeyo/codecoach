@@ -1,0 +1,82 @@
+diff --git a/.gitlab-ci.yml b/.gitlab-ci.yml
+index 29050f9..6135c29 100644
+--- a/.gitlab-ci.yml
++++ b/.gitlab-ci.yml
+@@ -46,9 +46,47 @@ eslint-on-mr:
+     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+   image: reg-hk.agodadev.io/dockerhub/library/node:18-alpine
+   script:
+-    # download latest master artifact
+-    - wget "https://gitlab.agodadev.io/api/v4/projects/${CI_PROJECT_ID}/jobs/artifacts/${CI_DEFAULT_BRANCH}/download?job=eslint" -O artifacts.zip
+-    - unzip artifacts.zip
+-
++    - echo "ESLINT_CONTEXT=$(pwd)" > env.txt
+     - yarn install --frozen-lockfile
+     - yarn lint || true
++  artifacts:
++    when: on_success
++    paths:
++      - ./eslint-report.json
++    reports:
++      dotenv: env.txt
++
++codecoach-on-mr:
++  extends: [.codecoach]
++  stage: lint
++  needs: [eslint-on-mr]
++  rules:
++    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
++      when: never
++    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
++  variables:
++    LINT_TYPE: eslint
++    LINT_OUTPUT: eslint-report.json
++    LINT_CONTEXT: ${ESLINT_CONTEXT}
++
++codecoach-game:
++  stage: lint
++  rules:
++    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
++      when: never
++    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
++  needs: [codecoach-on-mr]
++  image: reg-hk.agodadev.io/dockerhub/library/node:18-alpine
++  script:
++    - apk add curl --no-cache
++
++    # default branch codecoach result
++    - |
++      curl \
++        --header "PRIVATE-TOKEN: ${CODECOACH_TOKEN}" \
++        "https://gitlab.agodadev.io/api/v4/projects/${CI_PROJECT_ID}/jobs/artifacts/${CI_DEFAULT_BRANCH}/raw/output.json?job=codecoach" \
++        -o default_branch.json
++    - cat default_branch.json
++
++    # mr codecoach result
++    - cat output.json
+diff --git a/package.json b/package.json
+index be70d95..5e88dd9 100644
+--- a/package.json
++++ b/package.json
+@@ -6,7 +6,7 @@
+   "scripts": {
+     "dev": "vite",
+     "build": "tsc && vite build",
+-    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0 --output-file ./eslint-report.json -f json",
++    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0 --output-file ./eslint-report.json --format json",
+     "preview": "vite preview"
+   },
+   "dependencies": {
+diff --git a/src/App.tsx b/src/App.tsx
+index 3634330..61042d1 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -23,7 +23,7 @@ function App() {
+           <img src={reactLogo} className="logo react" alt="React logo" />
+         </a>
+       </div>
+-      <h1>Vite + React</h1>
++      <h1>Non</h1>
+       <div className="card">
+         <button onClick={() => setCount((count) => count + 1)}>
+           count is {count}

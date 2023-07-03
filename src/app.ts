@@ -19,8 +19,10 @@ import { GitLabMRService } from './Provider/GitLab/GitLabMRService';
 import { GitHubAdapter } from './Provider/GitHub/GitHubAdapter';
 import { VCSEngine } from './Provider/CommonVCS/VCSEngine';
 import { GitLabAdapter } from './Provider/GitLab/GitLabAdapter';
+import { LocalGitAdapter } from './Provider/LocalGit/LocalGitAdapter';
 import { VCSAdapter } from './Provider/@interfaces/VCSAdapter';
 import { AnalyzerBot } from './AnalyzerBot/AnalyzerBot';
+import simpleGit from 'simple-git';
 
 class App {
   private vcs: VCS | null = null;
@@ -55,6 +57,8 @@ class App {
       return new GitHubAdapter(githubPRService);
     } else if (configs.vcs === 'gitlab') {
       return new GitLabAdapter(new GitLabMRService());
+    } else if (configs.vcs === 'local') {
+      return new LocalGitAdapter(simpleGit());
     }
   }
 

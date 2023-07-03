@@ -1,4 +1,4 @@
-import { getPatch } from './patchProcessor';
+import { getDiff, getPatch } from './patchProcessor';
 import { readFile } from 'fs/promises';
 
 describe('patchProcessor', () => {
@@ -35,6 +35,19 @@ describe('patchProcessor', () => {
       expect(patches).toHaveLength(2);
       expect(patches[0]).toStrictEqual({ from: 85, to: 85 });
       expect(patches[1]).toStrictEqual({ from: 89, to: 90 });
+    });
+  });
+
+  describe('getDiff', () => {
+    it.only('should process patch of multiple files', async () => {
+      const content = await readFile('sample/git-diff/multifile.diff');
+      const patches = getDiff(content.toString());
+      console.log(JSON.stringify(patches, null, 2));
+
+      expect(patches).toHaveLength(3);
+      // expect(patches[0]).toStrictEqual({ from: 8, to: 8 });
+      // expect(patches[1]).toStrictEqual({ from: 33, to: 33 });
+      // expect(patches[2]).toStrictEqual({ from: 53, to: 53 });
     });
   });
 });
